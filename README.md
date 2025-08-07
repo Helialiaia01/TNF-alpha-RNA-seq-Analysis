@@ -1,32 +1,32 @@
-# 🧬 TNF-α Effects on Brain Endothelial Cells: RNA-seq Analysis
+# TNF-α Effects on Brain Endothelial Cells: RNA-seq Analysis
 
-[![R](https://img.shields.io/badge/R-276DC3?style=for-the-badge&logo=r&logoColor=white)](https://www.r-project.org/)
-[![Bioconductor](https://img.shields.io/badge/Bioconductor-1f65b7?style=for-the-badge&logo=r&logoColor=white)](https://bioconductor.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![R](https://img.shields.io/badge/R-276DC3?style=flat-square&logo=r&logoColor=white)](https://www.r-project.org/)
+[![Bioconductor](https://img.shields.io/badge/Bioconductor-1f65b7?style=flat-square&logo=r&logoColor=white)](https://bioconductor.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
-**A comprehensive RNA-seq analysis investigating the transcriptional response of brain endothelial cells to TNF-α treatment using professional bioinformatics workflows.**
+A comprehensive RNA-seq analysis investigating the transcriptional response of brain endothelial cells to TNF-α treatment using professional bioinformatics workflows.
 
-## 📋 **Project Overview**
+## Project Overview
 
 This project presents a complete differential expression analysis of human brain microvascular endothelial cells treated with TNF-α (tumor necrosis factor alpha), a key pro-inflammatory cytokine involved in neuroinflammation and blood-brain barrier dysfunction.
 
-### **🔬 Scientific Background**
+### Scientific Background
 - **Research Focus**: TNF-α effects on brain endothelial cells and blood-brain barrier function
 - **Clinical Relevance**: Neuroinflammation, stroke, Alzheimer's disease, multiple sclerosis
 - **Data Source**: Expression Atlas experiment E-MTAB-11468 (EMBL-EBI)
 - **Cell Type**: iPSC-derived brain microvascular endothelial cells
 - **Experimental Design**: Control (n=12) vs TNF-α treated (n=12) samples
 
-### **📊 Key Findings**
+### Key Findings
 - **5,813 differentially expressed genes** (padj < 0.05)
 - **Balanced regulation**: 2,853 upregulated, 2,960 downregulated genes
 - **Strong inflammatory response**: Multiple immune pathways activated
 - **High data quality**: 49-59M reads/sample, Phred >30
 - **Biological validation**: Consistent with known TNF-α biology
 
-## 🚀 **Quick Start**
+## Quick Start
 
-### **Prerequisites**
+### Prerequisites
 - R (≥4.0.0)
 - RStudio (recommended)
 - Bioconductor packages (see requirements.R)
@@ -43,7 +43,7 @@ source("requirements.R")
 ### **Running the Analysis**
 1. **Clone this repository**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/TNF-alpha-RNA-seq-Analysis.git
+   git clone https://github.com/Helialiaia01/TNF-alpha-RNA-seq-Analysis.git
    cd TNF-alpha-RNA-seq-Analysis
    ```
 
@@ -198,55 +198,30 @@ This is an educational and research project. Contributions welcome:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 **Acknowledgments**
+## Acknowledgments
 
-- **EMBL-EBI Expression Atlas** for high-quality public datasets
-- **Bioconductor Project** for comprehensive genomics tools
-- **R Community** for statistical computing excellence
-- **DESeq2 Authors** (Love, Huber, Anders) for robust methodology
+This analysis uses data from the EMBL-EBI Expression Atlas (experiment E-MTAB-11468). The statistical analysis pipeline relies on DESeq2 (Love et al., 2014) and other Bioconductor packages.
 
-## 📞 **Contact**
+## Contact
 
-**Helia Mohammadi**
-- 🎓 **Student**: Advanced Computer Science and Artificial Intelligence
-- 🧬 **Specialization**: Bioinformatics and Computational Biology
-- 📧 **Email**: [your.email@example.com]
-- 💼 **LinkedIn**: [your-linkedin-profile]
+**Helia Mohammadi**  
+Student, Applied Computer Science and Artificial Intelligence  
+Email: qhellia@gmail.com
 
-## 🎯 **Citation**
+For questions about this analysis or collaboration opportunities, feel free to reach out.
 
-If you use this analysis in your research, please cite:
+## Citation
+
+If you find this analysis useful for your research, please cite:
 
 ```bibtex
 @misc{mohammadi2025tnf,
   title={TNF-α Effects on Brain Endothelial Cells: RNA-seq Analysis},
   author={Mohammadi, Helia},
   year={2025},
-  url={https://github.com/YOUR_USERNAME/TNF-alpha-RNA-seq-Analysis},
+  url={https://github.com/Helialiaia01/TNF-alpha-RNA-seq-Analysis},
   note={Comprehensive differential expression analysis using DESeq2}
 }
 ```
-
----
-
-## 🌟 **Project Highlights**
-
-### **Professional Quality**
-- ✅ **Publication-standard analysis** with proper statistical methods
-- ✅ **Comprehensive documentation** with biological interpretation
-- ✅ **Reproducible workflow** from raw data to final results
-- ✅ **Professional visualizations** suitable for presentations/publications
-
-### **Educational Value**
-- 📚 **Complete RNA-seq pipeline** for learning bioinformatics
-- 🎓 **Best practices demonstration** in computational biology
-- 🔬 **Scientific method application** to real biological questions
-- 💻 **Advanced R programming** techniques and packages
-
-### **Technical Excellence**
-- 🎯 **Rigorous statistical analysis** with appropriate corrections
-- 📊 **Advanced data visualization** using professional tools
-- 🧪 **Biological validation** against known literature
-- 🔄 **Reproducible research** practices throughout
 
 **This project represents professional-quality bioinformatics work suitable for academic, industrial, or research applications.** 🚀
