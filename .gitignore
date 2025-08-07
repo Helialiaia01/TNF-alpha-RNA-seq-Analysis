@@ -1,0 +1,35 @@
+# R and Bioinformatics specific files
+.Rhistory
+.RData
+.Rproj.user
+*.Rproj
+
+# Rendered output files
+*.html
+*.pdf
+
+# System files
+.DS_Store
+Thumbs.db
+*~
+
+# Temporary files
+*.tmp
+*.log
+
+# Large data files (uncomment if needed)
+# data/*.tsv
+# data/*.csv
+# data/*.txt
+
+# Plot files generated during development (keep final plots)
+# plots/temp_*
+
+# IDE files
+.vscode/
+.idea/
+
+# Cache directories
+cache/
+*_cache/
+*_files/
