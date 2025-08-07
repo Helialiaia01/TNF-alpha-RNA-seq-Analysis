@@ -4,16 +4,18 @@
 [![Bioconductor](https://img.shields.io/badge/Bioconductor-1f65b7?style=flat-square&logo=r&logoColor=white)](https://bioconductor.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
-A comprehensive RNA-seq analysis investigating the transcriptional response of brain endothelial cells to TNF-α treatment using professional bioinformatics workflows.
+A comprehensive RNA-seq analysis investigating the transcriptional response of brain endothelial cells to TNF-α treatment. This is an educational project demonstrating bioinformatics workflows and statistical analysis techniques.
 
 ## Project Overview
 
-This project presents a complete differential expression analysis of human brain microvascular endothelial cells treated with TNF-α (tumor necrosis factor alpha), a key pro-inflammatory cytokine involved in neuroinflammation and blood-brain barrier dysfunction.
+This project presents a differential expression analysis of human brain microvascular endothelial cells treated with TNF-α (tumor necrosis factor alpha), a key pro-inflammatory cytokine involved in neuroinflammation and blood-brain barrier dysfunction.
+
+**Note**: This is an educational project for learning bioinformatics analysis techniques. Some methodological limitations exist (see Limitations section below).
 
 ### Scientific Background
 - **Research Focus**: TNF-α effects on brain endothelial cells and blood-brain barrier function
 - **Clinical Relevance**: Neuroinflammation, stroke, Alzheimer's disease, multiple sclerosis
-- **Data Source**: Expression Atlas experiment E-MTAB-11468 (EMBL-EBI)
+- **Data Source**: Expression Atlas experiment E-MTAB-11468 ([EMBL-EBI](https://www.ebi.ac.uk/gxa/experiments/E-MTAB-11468))
 - **Cell Type**: iPSC-derived brain microvascular endothelial cells
 - **Experimental Design**: Control (n=12) vs TNF-α treated (n=12) samples
 
@@ -23,6 +25,12 @@ This project presents a complete differential expression analysis of human brain
 - **Strong inflammatory response**: Multiple immune pathways activated
 - **High data quality**: 49-59M reads/sample, Phred >30
 - **Biological validation**: Consistent with known TNF-α biology
+
+### Limitations
+- **Data interpretation**: Some column misinterpretations occurred during initial analysis
+- **Clustering methods**: Clustering approach may not be optimal for this dataset
+- **Educational purpose**: This analysis is primarily for learning, not research publication
+- **Methodological refinements**: Several analysis steps could be improved with additional validation
 
 ## Quick Start
 
@@ -123,7 +131,7 @@ TNF-alpha-RNA-seq-Analysis/
 - **Read Depth**: 49-59 million reads per sample
 - **Sequence Quality**: Phred scores >30 (>99.9% accuracy)
 - **Gene Coverage**: 49,225 genes analyzed (after filtering)
-- **Technical Quality**: Publication-grade data standards
+- **Technical Quality**: Standard RNA-seq data quality
 
 ## 📊 **Key Visualizations**
 
@@ -224,4 +232,4 @@ If you find this analysis useful for your research, please cite:
 }
 ```
 
-**This project represents professional-quality bioinformatics work suitable for academic, industrial, or research applications.** 🚀
+**This project represents an educational bioinformatics analysis suitable for learning and demonstrating RNA-seq analysis techniques.** �
