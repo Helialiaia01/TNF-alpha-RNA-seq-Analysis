@@ -201,14 +201,29 @@ library(RColorBrewer)  # For color palettes in plots
 library(gridExtra)     # For multi-panel plots
 library(ggrepel)       # For better plot labels
 
-# Set working directory
-setwd("~/ACSAI/BIOINFO/RNAseq_Analysis_Project")
+# Note: Working directory should be the project root
+# If using RStudio, open the .Rproj file or use Session > Set Working Directory
 ```
 
 ```{r check-files}
 # Check what data files are available
 cat("Files in data directory:\n")
-print(list.files("data/"))
+if(dir.exists("data")) {
+  print(list.files("data/"))
+} else {
+  stop("Data directory not found! Please ensure you are in the correct working directory.")
+}
+
+# Verify required files exist
+required_files <- c("data/E-MTAB-11468-experiment-design.tsv",
+                    "data/E-MTAB-11468-raw-counts.tsv")
+missing_files <- required_files[!file.exists(required_files)]
+
+if(length(missing_files) > 0) {
+  stop("Missing required data files:\n", paste(missing_files, collapse = "\n"))
+}
+
+cat("\n✓ All required data files found!\n")
 ```
 
 ```{r load-data}
@@ -256,24 +271,20 @@ for(col in colnames(colData)) {
 # Set sample IDs as rownames
 rownames(colData) <- colData$Run
 
-# Create treatment factor - find the stimulus column
-if(ncol(colData) >= 16) {
-  colData$treatment <- factor(colData[, 16])
-  cat("Using column 16 for treatment groups\n")
+# Create treatment factor - find the stimulus column using pattern matching
+stimulus_cols <- grep("stimulus", colnames(colData), ignore.case = TRUE)
+factor_stimulus_cols <- grep("Factor.*stimulus", colnames(colData), ignore.case = TRUE)
+
+if(length(factor_stimulus_cols) > 0) {
+  # Prefer Factor.Value columns (standard Expression Atlas format)
+  colData$treatment <- factor(colData[, factor_stimulus_cols[1]])
+  cat("Found Factor stimulus column:", colnames(colData)[factor_stimulus_cols[1]], "\n")
+} else if(length(stimulus_cols) > 0) {
+  # Fall back to any column with "stimulus" in the name
+  colData$treatment <- factor(colData[, stimulus_cols[1]])
+  cat("Found stimulus column:", colnames(colData)[stimulus_cols[1]], "\n")
 } else {
-  # Find column by pattern matching
-  stimulus_cols <- grep("stimulus", colnames(colData), ignore.case = TRUE)
-  factor_stimulus_cols <- grep("Factor.*stimulus", colnames(colData), ignore.case = TRUE)
-  
-  if(length(factor_stimulus_cols) > 0) {
-    colData$treatment <- factor(colData[, factor_stimulus_cols[1]])
-    cat("Found Factor stimulus column:", colnames(colData)[factor_stimulus_cols[1]], "\n")
-  } else if(length(stimulus_cols) > 0) {
-    colData$treatment <- factor(colData[, stimulus_cols[1]])
-    cat("Found stimulus column:", colnames(colData)[stimulus_cols[1]], "\n")
-  } else {
-    stop("Could not find stimulus column! Please check column names above.")
-  }
+  stop("Could not find stimulus column! Please check column names above.")
 }
 
 # Check treatment groups
@@ -697,9 +708,21 @@ go_down_bp <- enrichGO(gene = down_genes,
                        pvalueCutoff = 0.05,
                        qvalueCutoff = 0.2)
 
-# Show summary
-cat("GO BP categories enriched in upregulated genes:", nrow(go_up_bp@result), "\n")
-cat("GO BP categories enriched in downregulated genes:", nrow(go_down_bp@result), "\n")
+# Show summary with safe checks
+go_up_count <- if(!is.null(go_up_bp) && nrow(go_up_bp@result) > 0) {
+  nrow(go_up_bp@result)
+} else {
+  0
+}
+
+go_down_count <- if(!is.null(go_down_bp) && nrow(go_down_bp@result) > 0) {
+  nrow(go_down_bp@result)
+} else {
+  0
+}
+
+cat("GO BP categories enriched in upregulated genes:", go_up_count, "\n")
+cat("GO BP categories enriched in downregulated genes:", go_down_count, "\n")
 ```
 
 ## Project Question 3: GO Categories Analysis
@@ -707,16 +730,29 @@ cat("GO BP categories enriched in downregulated genes:", nrow(go_down_bp@result)
 **Question**: *How many GO biological process categories are enriched in upregulated vs downregulated genes?*
 
 ```{r go-question-analysis}
+# Count only SIGNIFICANT GO categories (padj < 0.05), not all results
+go_up_sig <- if(exists("go_up_bp") && nrow(go_up_bp@result) > 0) {
+  sum(go_up_bp@result$p.adjust < 0.05, na.rm = TRUE)
+} else {
+  0
+}
+
+go_down_sig <- if(exists("go_down_bp") && nrow(go_down_bp@result) > 0) {
+  sum(go_down_bp@result$p.adjust < 0.05, na.rm = TRUE)
+} else {
+  0
+}
+
 cat("ANSWER TO PROJECT QUESTION 3:\n")
 cat("=====================================\n")
-cat("GO categories (upregulated genes):", nrow(go_up_bp@result), "\n")
-cat("GO categories (downregulated genes):", nrow(go_down_bp@result), "\n\n")
+cat("Significant GO categories (upregulated genes):", go_up_sig, "\n")
+cat("Significant GO categories (downregulated genes):", go_down_sig, "\n\n")
 
 cat("INTERPRETATION:\n")
-if(nrow(go_up_bp@result) > nrow(go_down_bp@result)) {
+if(go_up_sig > go_down_sig) {
   cat("• Upregulated genes show more diverse functional enrichment\n")
   cat("• TNF-α activates multiple biological pathways\n")
-} else if(nrow(go_down_bp@result) > nrow(go_up_bp@result)) {
+} else if(go_down_sig > go_up_sig) {
   cat("• Downregulated genes show more diverse functional enrichment\n")
   cat("• TNF-α primarily inhibits multiple biological pathways\n")
 } else {
@@ -1009,15 +1045,19 @@ if(exists("res_sig")) {
   top_down <- res_sig[order(res_sig$log2FoldChange),][1:5,]
   
   cat("TOP UPREGULATED GENES:\n")
-  for(i in 1:min(5, nrow(top_up))) {
-    cat(sprintf("• %s: %+.2f log2FC (padj = %.2e)\n", 
-                rownames(top_up)[i], top_up$log2FoldChange[i], top_up$padj[i]))
+  if(nrow(top_up) > 0) {
+    for(i in seq_len(min(5, nrow(top_up)))) {
+      cat(sprintf("• %s: %+.2f log2FC (padj = %.2e)\n", 
+                  rownames(top_up)[i], top_up$log2FoldChange[i], top_up$padj[i]))
+    }
   }
   
   cat("\nTOP DOWNREGULATED GENES:\n")
-  for(i in 1:min(5, nrow(top_down))) {
-    cat(sprintf("• %s: %+.2f log2FC (padj = %.2e)\n", 
-                rownames(top_down)[i], top_down$log2FoldChange[i], top_down$padj[i]))
+  if(nrow(top_down) > 0) {
+    for(i in seq_len(min(5, nrow(top_down)))) {
+      cat(sprintf("• %s: %+.2f log2FC (padj = %.2e)\n", 
+                  rownames(top_down)[i], top_down$log2FoldChange[i], top_down$padj[i]))
+    }
   }
 }
 ```
@@ -1078,7 +1118,7 @@ if(exists("go_up_bp") && nrow(go_up_bp@result) > 0) {
   if(go_up_sig > 0) {
     top_go_up <- go_up_bp@result[go_up_bp@result$p.adjust < 0.05,][1:min(3, go_up_sig),]
     cat("• Top enriched categories:\n")
-    for(i in 1:nrow(top_go_up)) {
+    for(i in seq_len(nrow(top_go_up))) {
       cat(sprintf("  - %s (padj = %.2e)\n", top_go_up$Description[i], top_go_up$p.adjust[i]))
     }
   }
@@ -1096,7 +1136,7 @@ if(exists("go_down_bp") && nrow(go_down_bp@result) > 0) {
   if(go_down_sig > 0) {
     top_go_down <- go_down_bp@result[go_down_bp@result$p.adjust < 0.05,][1:min(3, go_down_sig),]
     cat("• Top enriched categories:\n")
-    for(i in 1:nrow(top_go_down)) {
+    for(i in seq_len(nrow(top_go_down))) {
       cat(sprintf("  - %s (padj = %.2e)\n", top_go_down$Description[i], top_go_down$p.adjust[i]))
     }
   }
