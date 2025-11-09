@@ -186,80 +186,73 @@ Results were compared with known TNF-α response patterns and published Expressi
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
                       fig.width = 10, fig.height = 8, dpi = 300)
 
-# Create directories for outputs
+# Create output directories
 if(!dir.exists("plots")) dir.create("plots", recursive = TRUE)
 if(!dir.exists("results")) dir.create("results", recursive = TRUE)
 ```
 
 ```{r libraries}
-# Load essential R packages for RNA-seq analysis
-library(DESeq2)        # Main package for differential expression analysis
-library(ggplot2)       # For creating beautiful plots
-library(pheatmap)      # For heatmaps
-library(dplyr)         # For data manipulation
-library(RColorBrewer)  # For color palettes in plots
-library(gridExtra)     # For multi-panel plots
-library(ggrepel)       # For better plot labels
-
-# Note: Working directory should be the project root
-# If using RStudio, open the .Rproj file or use Session > Set Working Directory
+# Load packages
+library(DESeq2)
+library(ggplot2)
+library(pheatmap)
+library(dplyr)
+library(RColorBrewer)
+library(gridExtra)
+library(ggrepel)
 ```
 
 ```{r check-files}
-# Check what data files are available
+# Check for required data files
 cat("Files in data directory:\n")
 if(dir.exists("data")) {
   print(list.files("data/"))
 } else {
-  stop("Data directory not found! Please ensure you are in the correct working directory.")
+  stop("Data directory not found")
 }
 
-# Verify required files exist
 required_files <- c("data/E-MTAB-11468-experiment-design.tsv",
                     "data/E-MTAB-11468-raw-counts.tsv")
 missing_files <- required_files[!file.exists(required_files)]
 
 if(length(missing_files) > 0) {
-  stop("Missing required data files:\n", paste(missing_files, collapse = "\n"))
+  stop("Missing files:\n", paste(missing_files, collapse = "\n"))
 }
 
-cat("\n✓ All required data files found!\n")
+cat("\n✓ All required files found\n")
 ```
 
 ```{r load-data}
-# Load experiment design (metadata about each sample)
+# Load experiment metadata and count data
 colData <- read.table("data/E-MTAB-11468-experiment-design.tsv", 
                       header = TRUE, sep = "\t", stringsAsFactors = FALSE)
 
-# Load raw gene counts (how many reads map to each gene in each sample)
 counts <- read.table("data/E-MTAB-11468-raw-counts.tsv", 
                      header = TRUE, sep = "\t", row.names = 1)
 
-# Remove non-numeric columns (keep only the count data)
+# Keep only numeric columns
 numeric_cols <- sapply(counts, is.numeric)
 counts <- counts[, numeric_cols]
 
-cat("Data loaded successfully!\n")
-cat("Samples:", ncol(counts), "\n")    # Number of biological samples
-cat("Genes:", nrow(counts), "\n")      # Number of genes measured
+cat("Loaded", ncol(counts), "samples and", nrow(counts), "genes\n")
 ```
 
 # Data Exploration
 
 ```{r explore-metadata}
-# Examine the experimental design to understand the data
+# Examine experimental design
 cat("Experiment design columns:\n")
-print(colnames(colData))  # Shows what information we have about each sample
+print(colnames(colData))
 
 cat("\nFirst few rows:\n")
-print(head(colData))      # Shows the first 6 samples and their metadata
+print(head(colData))
 
-# Look at experimental factors (treatment groups, conditions, etc.)
+# Check experimental factors
 cat("\nExperimental factors:\n")
 for(col in colnames(colData)) {
     if(is.character(colData[[col]]) || is.factor(colData[[col]])) {
         cat("\nColumn:", col, "\n")
-        print(table(colData[[col]]))  # Counts how many samples in each group
+        print(table(colData[[col]]))
     }
 }
 ```
@@ -267,40 +260,33 @@ for(col in colnames(colData)) {
 # Data Preparation
 
 ```{r prepare-data}
-# Prepare data for statistical analysis
-# Set sample IDs as rownames
+# Match samples between counts and metadata
 rownames(colData) <- colData$Run
 
-# Create treatment factor - find the stimulus column using pattern matching
+# Find treatment column
 stimulus_cols <- grep("stimulus", colnames(colData), ignore.case = TRUE)
 factor_stimulus_cols <- grep("Factor.*stimulus", colnames(colData), ignore.case = TRUE)
 
 if(length(factor_stimulus_cols) > 0) {
-  # Prefer Factor.Value columns (standard Expression Atlas format)
   colData$treatment <- factor(colData[, factor_stimulus_cols[1]])
-  cat("Found Factor stimulus column:", colnames(colData)[factor_stimulus_cols[1]], "\n")
+  cat("Using column:", colnames(colData)[factor_stimulus_cols[1]], "\n")
 } else if(length(stimulus_cols) > 0) {
-  # Fall back to any column with "stimulus" in the name
   colData$treatment <- factor(colData[, stimulus_cols[1]])
-  cat("Found stimulus column:", colnames(colData)[stimulus_cols[1]], "\n")
+  cat("Using column:", colnames(colData)[stimulus_cols[1]], "\n")
 } else {
-  stop("Could not find stimulus column! Please check column names above.")
+  stop("Could not find stimulus column")
 }
 
-# Check treatment groups
 cat("Treatment groups:\n")
-print(table(colData$treatment))  # Shows how many samples per treatment
+print(table(colData$treatment))
 
-# Make sure samples match between counts and metadata
+# Match samples
 common_samples <- intersect(colnames(counts), rownames(colData))
-cat("Common samples found:", length(common_samples), "\n")
-
-# Filter to common samples (keeps only samples present in both datasets)
 counts <- counts[, common_samples]
 colData <- colData[common_samples, ]
-
-# Reorder to match (ensures same order in both datasets)
 colData <- colData[colnames(counts), ]
+
+cat("Matched", length(common_samples), "samples\n")
 ```
 
 # Quality Control Assessment
@@ -391,17 +377,16 @@ The MultiQC dashboard integration reveals:
 
 
 
-# Create DESeq2 dataset (combines counts and metadata for analysis)
+# Create DESeq2 dataset
 dds <- DESeqDataSetFromMatrix(countData = counts,
                               colData = colData,
                               design = ~ treatment)
 
-# Filter low-count genes (removes genes with very few reads)
-# This improves statistical power and reduces multiple testing burden
+# Filter low-count genes
 keep <- rowSums(counts(dds)) > 1
 dds <- dds[keep, ]
 
-cat("Genes after filtering:", nrow(dds), "\n")
+cat("Filtered to", nrow(dds), "genes\n")
 ```
 
 ```{r deseq2-analysis}
@@ -409,14 +394,12 @@ cat("Genes after filtering:", nrow(dds), "\n")
 
 
 cat("Running DESeq2 analysis...\n")
-dds <- DESeq(dds)  # This does: normalization, dispersion estimation, statistical testing
+dds <- DESeq(dds)
 
-# Get results - FIXED for your data!
-# This compares "tumor necrosis factor alpha" vs "none" (control)
+# Get results comparing TNF-α vs control
 res <- results(dds, contrast = c("treatment", "tumor necrosis factor alpha", "none"))
 
-# Summary of results
-summary(res)  # Shows how many genes are up/down regulated at different thresholds
+summary(res)
 ```
 
 # Results and Project Questions
@@ -426,9 +409,9 @@ summary(res)  # Shows how many genes are up/down regulated at different threshol
 **Question**: *How many genes are differentially expressed between TNF-α treated and control brain endothelial cells?*
 
 ```{r deg-counts}
-# Statistical Analysis: Count genes with significant expression changes
-deg_005 <- sum(res$padj < 0.05, na.rm = TRUE)  # Strict threshold (5% FDR)
-deg_01 <- sum(res$padj < 0.1, na.rm = TRUE)    # Moderate threshold (10% FDR)
+# Count differentially expressed genes
+deg_005 <- sum(res$padj < 0.05, na.rm = TRUE)
+deg_01 <- sum(res$padj < 0.1, na.rm = TRUE)
 
 cat("ANSWER TO PROJECT QUESTION 1:\n")
 cat("=====================================\n")
@@ -436,9 +419,8 @@ cat("Differentially expressed genes (padj < 0.05):", deg_005, "\n")
 cat("Differentially expressed genes (padj < 0.1):", deg_01, "\n\n")
 
 cat("INTERPRETATION:\n")
-cat("• Using the standard threshold (padj < 0.05), we identify", deg_005, "genes\n")
-cat("• This represents genes with <5% probability of being false positives\n")
-cat("• TNF-α treatment causes significant transcriptional changes\n")
+cat("• At FDR < 5%, we found", deg_005, "significant genes\n")
+cat("• TNF-α treatment causes substantial transcriptional changes\n")
 ```
 
 ## Project Question 2: Up vs Down Regulation Pattern
@@ -446,32 +428,25 @@ cat("• TNF-α treatment causes significant transcriptional changes\n")
 **Question**: *Are more genes upregulated or downregulated by TNF-α treatment?*
 
 ```{r up-down-reg}
-# Direction Analysis: Separate genes by expression direction
-up_reg <- sum(res$padj < 0.05 & res$log2FoldChange > 0, na.rm = TRUE)    # Increased expression
-down_reg <- sum(res$padj < 0.05 & res$log2FoldChange < 0, na.rm = TRUE)  # Decreased expression
+# Separate by direction
+up_reg <- sum(res$padj < 0.05 & res$log2FoldChange > 0, na.rm = TRUE)
+down_reg <- sum(res$padj < 0.05 & res$log2FoldChange < 0, na.rm = TRUE)
 
 cat("ANSWER TO PROJECT QUESTION 2:\n")
 cat("=====================================\n")
-cat("Upregulated genes (higher with TNF-α):", up_reg, "\n")
-cat("Downregulated genes (lower with TNF-α):", down_reg, "\n\n")
+cat("Upregulated genes:", up_reg, "\n")
+cat("Downregulated genes:", down_reg, "\n\n")
 
 cat("INTERPRETATION:\n")
 if(up_reg > down_reg) {
-  cat("• TNF-α primarily ACTIVATES gene expression\n")
-  cat("• More genes are turned ON than turned OFF\n")
-  cat("• This suggests a predominantly stimulatory effect\n")
+  cat("• TNF-α primarily activates gene expression\n")
+  cat("• Up/Down ratio:", round(up_reg / down_reg, 2), "\n")
 } else if(down_reg > up_reg) {
-  cat("• TNF-α primarily REPRESSES gene expression\n") 
-  cat("• More genes are turned OFF than turned ON\n")
-  cat("• This suggests a predominantly inhibitory effect\n")
+  cat("• TNF-α primarily represses gene expression\n")
+  cat("• Down/Up ratio:", round(down_reg / up_reg, 2), "\n")
 } else {
-  cat("• TNF-α has balanced effects on gene expression\n")
-  cat("• Equal numbers of genes are activated and repressed\n")
+  cat("• Balanced activation and repression\n")
 }
-
-# Calculate ratio for additional insight
-ratio <- round(up_reg / down_reg, 2)
-cat("• Up/Down ratio:", ratio, "\n")
 ```
 
 # Visualization
@@ -481,16 +456,13 @@ cat("• Up/Down ratio:", ratio, "\n")
 ```{r pca-plot}
 
 
-# - Samples that cluster together are similar
-# - Treatment groups should separate if TNF-α has strong effects
-
-vsd <- vst(dds, blind = FALSE)  # Transforms data for visualization
+# Variance-stabilizing transformation for visualization
+vsd <- vst(dds, blind = FALSE)
 pca_plot <- plotPCA(vsd, intgroup = "treatment") +
     ggtitle("PCA: TNF-α vs Control") +
     theme_minimal()
 print(pca_plot)
 
-# Save the plot
 ggsave("plots/pca_plot.png", plot = pca_plot, width = 8, height = 6)
 ```
 
@@ -499,11 +471,6 @@ ggsave("plots/pca_plot.png", plot = pca_plot, width = 8, height = 6)
 ```{r ma-plot}
 
 
-# - X-axis: Average expression level (higher = more expressed genes)
-# - Y-axis: How much the gene changes (positive = up, negative = down)
-# - Red dots: Statistically significant changes
-
-# Save the plot to a file
 png("plots/ma_plot.png", width = 8, height = 6, units = "in", res = 300)
 plotMA(res, main = "MA Plot: TNF-α vs Control", ylim = c(-5, 5))
 dev.off()
@@ -516,14 +483,9 @@ plotMA(res, main = "MA Plot: TNF-α vs Control", ylim = c(-5, 5))
 ```{r volcano-plot}
 
 
-# - X-axis: Fold change (how much gene expression changes)
-# - Y-axis: Statistical significance (higher = more significant)
-# - Red dots: Genes with both large changes AND statistical significance
-
-# Save the plot to a file
 png("plots/volcano_plot.png", width = 8, height = 6, units = "in", res = 300)
 plot(res$log2FoldChange, -log10(res$padj), 
-     xlab = "log2FoldChange", ylab = "-log10(padj)",
+     xlab = "log2 Fold Change", ylab = "-log10(adjusted p-value)",
      main = "Volcano Plot: TNF-α vs Control",
      pch = 20, col = "gray")
 abline(v = c(-1, 1), col = "red", lty = 2)
@@ -534,15 +496,11 @@ points(res$log2FoldChange[sig_genes], -log10(res$padj[sig_genes]),
 dev.off()
 
 plot(res$log2FoldChange, -log10(res$padj), 
-     xlab = "log2FoldChange", ylab = "-log10(padj)",
+     xlab = "log2 Fold Change", ylab = "-log10(adjusted p-value)",
      main = "Volcano Plot: TNF-α vs Control",
      pch = 20, col = "gray")
-
-# Add significance thresholds (red lines)
-abline(v = c(-1, 1), col = "red", lty = 2)      # Fold change thresholds
-abline(h = -log10(0.05), col = "red", lty = 2)  # Significance threshold
-
-# Highlight significant genes in red
+abline(v = c(-1, 1), col = "red", lty = 2)
+abline(h = -log10(0.05), col = "red", lty = 2)
 sig_genes <- !is.na(res$padj) & res$padj < 0.05 & abs(res$log2FoldChange) > 1
 points(res$log2FoldChange[sig_genes], -log10(res$padj[sig_genes]), 
        col = "red", pch = 20)
@@ -551,17 +509,13 @@ points(res$log2FoldChange[sig_genes], -log10(res$padj[sig_genes]),
 ## Sample-to-Sample Distance Heatmap (Simplified)
 
 ```{r sample-distance-simplified}
-# Simplified sample distance heatmap - remove complex annotations
-
 # Calculate sample distances
 sampleDists <- dist(t(assay(vsd)))
 sampleDistMatrix <- as.matrix(sampleDists)
 
-# Simple row/column names with treatment info
 rownames(sampleDistMatrix) <- paste0("S", seq_along(colnames(vsd)), "_", vsd$treatment)
 colnames(sampleDistMatrix) <- rownames(sampleDistMatrix)
 
-# Simple heatmap without complex annotations
 colors <- colorRampPalette(rev(brewer.pal(9, "Blues")))(255)
 
 pheatmap(sampleDistMatrix,
@@ -569,9 +523,7 @@ pheatmap(sampleDistMatrix,
          clustering_distance_cols = sampleDists,
          col = colors,
          main = "Sample-to-Sample Distances",
-         fontsize = 9,
-         show_rownames = TRUE,
-         show_colnames = TRUE)
+         fontsize = 9)
 
 ggsave("plots/sample_distance_simple.png", width = 8, height = 6)
 ```
@@ -579,19 +531,14 @@ ggsave("plots/sample_distance_simple.png", width = 8, height = 6)
 ## Heatmap of Top 20 Most Differentially Expressed Genes (Streamlined)
 
 ```{r top-genes-heatmap-streamlined}
-# Show top 20 DEGs instead of 50 for better readability
-
-# Get top 20 most significant genes
+# Top 20 differentially expressed genes
 top_genes <- head(order(res$padj), 20)
 
-# Use rlog transformation for better visualization
 rld <- rlog(dds, blind = FALSE)
 heatmap_data <- assay(rld)[top_genes, ]
 
-# Add treatment info to column names for clarity
 colnames(heatmap_data) <- paste0("S", seq_along(colnames(heatmap_data)), "_", vsd$treatment)
 
-# Simple heatmap with better readability
 pheatmap(heatmap_data,
          cluster_rows = TRUE,
          cluster_cols = TRUE,
@@ -610,15 +557,9 @@ ggsave("plots/top20_genes_heatmap.png", width = 8, height = 6)
 
 
 
-# Create results and plots directories if they don't exist
-if(!dir.exists("results")) {
-    dir.create("results")
-}
-if(!dir.exists("plots")) {
-    dir.create("plots")
-}
+if(!dir.exists("results")) dir.create("results")
+if(!dir.exists("plots")) dir.create("plots")
 
-# Save complete results table (all genes with statistics)
 write.table(res, "results/differential_expression_results.txt", 
             sep = "\t", quote = FALSE, row.names = TRUE)
 
@@ -628,9 +569,9 @@ cat("Results saved to: results/differential_expression_results.txt\n")
 # Gene Ontology (GO) and Pathway Enrichment Analysis
 
 ```{r install-annotation-packages, eval=FALSE}
-# INSTALL THESE PACKAGES IF NEEDED (run once):
-# BiocManager::install(c("clusterProfiler", "org.Hs.eg.db", "org.Mm.eg.db", 
-#                        "ReactomePA", "msigdbr", "enrichplot"))
+# Install if needed (run once):
+# BiocManager::install(c("clusterProfiler", "org.Hs.eg.db", "ReactomePA", 
+#                        "msigdbr", "enrichplot"))
 ```
 
 ```{r load-annotation-libraries}
@@ -641,25 +582,23 @@ library(clusterProfiler)
 library(ReactomePA)
 library(enrichplot)
 library(msigdbr)
+library(org.Hs.eg.db)
 
-# Choose the right organism database (CHANGE THIS based on your species!)
-library(org.Hs.eg.db)  # Human - change to org.Mm.eg.db for mouse
-organism_db <- org.Hs.eg.db  # Change to org.Mm.eg.db for mouse
-species_name <- "human"  # Change to "mouse" for mouse
+organism_db <- org.Hs.eg.db
+species_name <- "human"
 ```
 
 ```{r gene-annotation}
 
 
 
-# Add gene symbols to results
+# Map Ensembl IDs to gene symbols
 res$symbol <- mapIds(organism_db,
                      keys = rownames(res),
                      column = "SYMBOL",
-                     keytype = "ENSEMBL",  # Change if your IDs are different
+                     keytype = "ENSEMBL",
                      multiVals = "first")
 
-# Show first few results
 head(res[!is.na(res$symbol), c("symbol", "log2FoldChange", "padj")])
 ```
 
@@ -667,19 +606,15 @@ head(res[!is.na(res$symbol), c("symbol", "log2FoldChange", "padj")])
 
 
 
-# Get significant genes
 sig_genes <- subset(res, padj < 0.05 & !is.na(symbol))
 
-# Separate up and down regulated genes
 up_genes <- sig_genes[sig_genes$log2FoldChange > 0, ]$symbol
 down_genes <- sig_genes[sig_genes$log2FoldChange < 0, ]$symbol
-
-# All expressed genes as universe
 all_genes <- res[!is.na(res$symbol), ]$symbol
 
-cat("Upregulated genes:", length(up_genes), "\n")
-cat("Downregulated genes:", length(down_genes), "\n")
-cat("Background genes:", length(all_genes), "\n")
+cat("Upregulated:", length(up_genes), "\n")
+cat("Downregulated:", length(down_genes), "\n")
+cat("Background:", length(all_genes), "\n")
 ```
 
 ## GO Enrichment Analysis
