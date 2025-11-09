@@ -466,18 +466,6 @@ print(pca_plot)
 ggsave("plots/pca_plot.png", plot = pca_plot, width = 8, height = 6)
 ```
 
-## MA Plot
-
-```{r ma-plot}
-
-
-png("plots/ma_plot.png", width = 8, height = 6, units = "in", res = 300)
-plotMA(res, main = "MA Plot: TNF-α vs Control", ylim = c(-5, 5))
-dev.off()
-
-plotMA(res, main = "MA Plot: TNF-α vs Control", ylim = c(-5, 5))
-```
-
 ## Volcano Plot
 
 ```{r volcano-plot}
@@ -506,32 +494,10 @@ points(res$log2FoldChange[sig_genes], -log10(res$padj[sig_genes]),
        col = "red", pch = 20)
 ```
 
-## Sample-to-Sample Distance Heatmap (Simplified)
+## Heatmap of Top 20 Differentially Expressed Genes
 
-```{r sample-distance-simplified}
-# Calculate sample distances
-sampleDists <- dist(t(assay(vsd)))
-sampleDistMatrix <- as.matrix(sampleDists)
-
-rownames(sampleDistMatrix) <- paste0("S", seq_along(colnames(vsd)), "_", vsd$treatment)
-colnames(sampleDistMatrix) <- rownames(sampleDistMatrix)
-
-colors <- colorRampPalette(rev(brewer.pal(9, "Blues")))(255)
-
-pheatmap(sampleDistMatrix,
-         clustering_distance_rows = sampleDists,
-         clustering_distance_cols = sampleDists,
-         col = colors,
-         main = "Sample-to-Sample Distances",
-         fontsize = 9)
-
-ggsave("plots/sample_distance_simple.png", width = 8, height = 6)
-```
-
-## Heatmap of Top 20 Most Differentially Expressed Genes (Streamlined)
-
-```{r top-genes-heatmap-streamlined}
-# Top 20 differentially expressed genes
+```{r top-genes-heatmap}
+# Top 20 most significant DEGs
 top_genes <- head(order(res$padj), 20)
 
 rld <- rlog(dds, blind = FALSE)
@@ -544,7 +510,7 @@ pheatmap(heatmap_data,
          cluster_cols = TRUE,
          show_rownames = TRUE,
          scale = "row",
-         main = "Top 20 Differentially Expressed Genes",
+         main = "Top 20 DEGs",
          fontsize = 9,
          fontsize_row = 8)
 
@@ -725,11 +691,11 @@ if(nrow(go_up_bp@result) > 0) {
 ```
 
 ```{r go-plots-streamlined}
-# Essential GO plots only - removed redundant visualizations
+# GO enrichment visualization
 
 if(nrow(go_up_bp@result) > 0) {
   p1 <- dotplot(go_up_bp, showCategory = 10, 
-               title = "GO BP - Upregulated Genes") +
+               title = "GO Enrichment - Upregulated Genes") +
        theme_minimal(base_size = 10) +
        theme(
          plot.title = element_text(size = 12),
@@ -743,7 +709,7 @@ if(nrow(go_up_bp@result) > 0) {
 
 if(nrow(go_down_bp@result) > 0) {
   p2 <- dotplot(go_down_bp, showCategory = 10, 
-               title = "GO BP - Downregulated Genes") +
+               title = "GO Enrichment - Downregulated Genes") +
        theme_minimal(base_size = 10) +
        theme(
          plot.title = element_text(size = 12),
@@ -754,9 +720,6 @@ if(nrow(go_down_bp@result) > 0) {
   print(p2)
   ggsave("plots/go_down_bp_dotplot.png", plot = p2, width = 10, height = 7)
 }
-
-# REMOVED: Enrichment map, tree plot, and heat plot
-# The dot plots provide the clearest and most interpretable visualization
 ```
 ```
 
@@ -847,7 +810,7 @@ cat("Significant HALLMARK gene sets:", nrow(gsea_result@result), "\n")
 ```{r gsea-plots-streamlined}
 if(exists("gsea_result") && !is.null(gsea_result) && nrow(gsea_result@result) > 0) {
   
-  # Essential Plot 1: GSEA Dot Plot
+  # GSEA enrichment dotplot
   p4 <- dotplot(gsea_result, showCategory = 15, 
                title = "GSEA - HALLMARK Gene Sets") +
         theme_minimal(base_size = 10) +
@@ -862,28 +825,6 @@ if(exists("gsea_result") && !is.null(gsea_result) && nrow(gsea_result@result) > 
   print(p4)
   ggsave("plots/gsea_dotplot.png", plot = p4, width = 10, height = 7, dpi = 300)
   
-  # Essential Plot 2: Top pathway enrichment plot (only the most significant one)
-  if(nrow(gsea_result@result) > 0) {
-    top_pathway <- gsea_result@result$ID[1]
-    
-    p_enrich <- gseaplot2(gsea_result, geneSetID = top_pathway, 
-                        title = top_pathway, 
-                        base_size = 9,
-                        pvalue_table = TRUE, 
-                        rel_heights = c(1.5, 0.5, 1)) +
-              theme(
-                plot.title = element_text(size = 11, hjust = 0.5),
-                axis.title = element_text(size = 9),
-                axis.text = element_text(size = 8),
-                legend.text = element_text(size = 7),
-                legend.title = element_text(size = 8),
-                legend.key.size = unit(0.4, "cm")
-              )
-    print(p_enrich)
-    ggsave("plots/gsea_top_pathway.png", plot = p_enrich, width = 8, height = 6, dpi = 300)
-  }
-  
-  # REMOVED: Multiple pathway plots, ridge plot, combined plots
 } else {
   cat("No significant HALLMARK gene sets found.\n")
 }
@@ -922,32 +863,6 @@ cat("\n=== VALIDATION STATUS ===\n")
 cat("Results show expected inflammatory response patterns\n")
 cat("Upregulation of key TNF-α pathway genes confirmed\n")
 cat("Analysis pipeline successfully replicates published findings\n")
-```
-
-# Summary bar chart of DEG counts (Essential visualization)
-deg_summary <- data.frame(
-  Category = c("Total DEGs", "Upregulated", "Downregulated"),
-  Count = c(deg_005, up_reg, down_reg)
-)
-
-p_summary <- ggplot(deg_summary, aes(x = Category, y = Count, fill = Category)) +
-  geom_bar(stat = "identity", width = 0.6) +
-  geom_text(aes(label = Count), vjust = -0.8, size = 4) +  
-  scale_fill_manual(values = c("Total DEGs" = "purple", "Upregulated" = "red", "Downregulated" = "blue")) +
-  theme_minimal(base_size = 12) +  
-  scale_y_continuous(expand = expansion(mult = c(0, 0.2))) +  
-  labs(title = "Differential Expression Summary",
-       subtitle = "TNF-α vs Control (padj < 0.05)",
-       x = "",
-       y = "Number of Genes") +
-  theme(
-    legend.position = "none",
-    plot.title = element_text(size = 14, hjust = 0.5),
-    plot.subtitle = element_text(size = 12, hjust = 0.5)
-  )
-
-print(p_summary)
-ggsave("plots/deg_summary_barchart.png", plot = p_summary, width = 8, height = 6, dpi = 300)
 ```
 
 # Final Summary & Project Answers
