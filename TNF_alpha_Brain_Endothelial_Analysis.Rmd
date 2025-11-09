@@ -240,7 +240,7 @@ if(length(missing_files) > 0) {
   stop("Missing files:\n", paste(missing_files, collapse = "\n"))
 }
 
-cat("\n✓ All required files found\n")
+cat("\nAll required files found\n")
 ```
 
 ```{r load-data}
@@ -287,9 +287,8 @@ for(col in colnames(colData)) {
 # Match samples between counts and metadata
 rownames(colData) <- colData$Run
 
-# CRITICAL: Filter for brain microvascular endothelial cells ONLY
-# The E-MTAB-11468 dataset contains both astrocytes and endothelial cells
-# We analyze ONLY endothelial cells (relevant to BBB function in MS)
+# Filter for brain endothelial cells only
+# Dataset has both astrocytes and endothelial cells
 cat("Original sample count:", nrow(colData), "\n")
 cat("\nAll cell types in dataset:\n")
 
@@ -310,8 +309,8 @@ if(length(cell_type_cols) > 0) {
     cat("Checking all columns for cell type information...\n")
   } else {
     colData <- colData[endothelial_samples, ]
-    cat("\n✓ Filtered to", sum(endothelial_samples), "brain microvascular endothelial cell samples\n")
-    cat("This focuses our analysis on BBB-relevant cells for MS research\n")
+    cat("\nFiltered to", sum(endothelial_samples), "brain endothelial cell samples\n")
+    cat("Focusing on BBB-forming cells\n")
   }
 }
 
@@ -338,8 +337,7 @@ counts <- counts[, common_samples]
 colData <- colData[common_samples, ]
 colData <- colData[colnames(counts), ]
 
-cat("\n✓ Final matched sample count:", length(common_samples), "\n")
-cat("Analysis scope: Brain microvascular endothelial cells responding to TNF-α\n")
+cat("\nFinal matched samples:", length(common_samples), "\n")
 ```
 
 # Quality Control Assessment

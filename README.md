@@ -1,8 +1,8 @@
-# TNF-α Effects on Brain Endothelial Cells# TNF-α Effects on Brain Endothelial Cells# TNF-α Effects on Brain Endothelial Cells# TNF-α Effects on Brain Endothelial Cells: RNA-seq Analysis
+# TNF-α Effects on Brain Endothelial Cells# TNF-α Effects on Brain Endothelial Cells# TNF-α Effects on Brain Endothelial Cells# TNF-α Effects on Brain Endothelial Cells# TNF-α Effects on Brain Endothelial Cells: RNA-seq Analysis
 
 
 
-RNA-seq analysis investigating how TNF-α (a pro-inflammatory molecule) affects brain endothelial cells - the cells that form the blood-brain barrier.
+RNA-seq analysis investigating how TNF-α affects brain endothelial cells - the cells that form the blood-brain barrier.
 
 
 
@@ -10,63 +10,133 @@ RNA-seq analysis investigating how TNF-α (a pro-inflammatory molecule) affects 
 
 
 
-I chose this analysis because a family member has Multiple Sclerosis (MS). Understanding how inflammation affects the blood-brain barrier is crucial because in MS, inflammatory molecules like TNF-α break down the protective barrier around the brain, allowing immune cells to attack the myelin coating of nerves.
+I chose this analysis because a family member has Multiple Sclerosis (MS). In MS, inflammatory molecules like TNF-α break down the blood-brain barrier, allowing immune cells to attack the myelin coating of nerves. This project helped me learn bioinformatics while studying something personally meaningful.
 
 
 
-This project helped me learn bioinformatics while studying something personally meaningful.## Why This Project?RNA-seq analysis investigating how TNF-α (an inflammatory molecule) affects brain endothelial cells - the cells that form the blood-brain barrier.[![R](https://img.shields.io/badge/R-276DC3?style=flat-square&logo=r&logoColor=white)](https://www.r-project.org/)
+```## Why This Project?RNA-seq analysis investigating how TNF-α (a pro-inflammatory molecule) affects brain endothelial cells - the cells that form the blood-brain barrier.
 
-
-
-```
-
-TNF-α (inflammatory signal)
-
-         ↓I chose this analysis because a family member has Multiple Sclerosis (MS). Understanding how inflammation affects the blood-brain barrier is crucial because in MS, inflammatory molecules like TNF-α break down the protective barrier around the brain, allowing immune cells to attack the myelin coating of nerves.[![Bioconductor](https://img.shields.io/badge/Bioconductor-1f65b7?style=flat-square&logo=r&logoColor=white)](https://bioconductor.org/)
-
-Brain Endothelial Cells (form blood-brain barrier)
-
-         ↓
-
-Gene Expression Changes (5,813 genes affected)
-
-         ↓This project helped me learn bioinformatics while studying something personally meaningful.## Why This Project?[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-
-BBB Breakdown → Immune Cell Infiltration → Myelin Damage (MS)
+TNF-α → Brain Endothelial Cells → Gene Changes → BBB Breakdown → MS
 
 ```
 
 
 
-## What I Did## What I Did
+## What I DidI chose this analysis because a family member has Multiple Sclerosis (MS). Understanding how inflammation affects the blood-brain barrier is crucial because in MS, inflammatory molecules like TNF-α break down the protective barrier around the brain, allowing immune cells to attack the myelin coating of nerves.
 
 
 
-I analyzed publicly available RNA-seq data to identify which genes change when brain endothelial cells are exposed to TNF-α. The goal was to understand the molecular mechanisms behind inflammation-induced blood-brain barrier dysfunction.
+I analyzed RNA-seq data to identify which genes change when brain endothelial cells are exposed to TNF-α. This helps understand the molecular mechanisms behind inflammation-induced blood-brain barrier dysfunction.
 
 
 
-**Data Source**: EMBL-EBI Expression Atlas  I analyzed publicly available RNA-seq data to identify which genes change when brain endothelial cells are exposed to TNF-α. The goal was to understand the molecular mechanisms behind inflammation-induced blood-brain barrier dysfunction.I chose this analysis because a family member has Multiple Sclerosis (MS), and understanding how inflammation affects the blood-brain barrier is crucial. In MS, inflammatory molecules like TNF-α break down the barrier that protects the brain, letting immune cells attack the protective myelin coating of nerves.RNA-seq analysis of **brain microvascular endothelial cells** treated with TNF-α, investigating transcriptional responses related to blood-brain barrier dysfunction in neuroinflammatory diseases, particularly **Multiple Sclerosis (MS)**.
-
-**Experiment**: E-MTAB-11468  
+**Data Source**: EMBL-EBI Expression Atlas (E-MTAB-11468)  This project helped me learn bioinformatics while studying something personally meaningful.## Why This Project?RNA-seq analysis investigating how TNF-α (an inflammatory molecule) affects brain endothelial cells - the cells that form the blood-brain barrier.[![R](https://img.shields.io/badge/R-276DC3?style=flat-square&logo=r&logoColor=white)](https://www.r-project.org/)
 
 **Link**: https://www.ebi.ac.uk/gxa/experiments/E-MTAB-11468
 
 
 
-**Important**: The original dataset includes both astrocytes and brain endothelial cells, but my analysis filters to study **only the brain endothelial cells** since they're the ones that form the blood-brain barrier.**Data Source**: EMBL-EBI Expression Atlas  
+The original dataset includes both astrocytes and endothelial cells, but I filtered to analyze only the brain endothelial cells since they form the blood-brain barrier.
+
+```
+
+## Key Findings
+
+TNF-α (inflammatory signal)
+
+- 5,813 genes significantly changed (FDR < 0.05)
+
+- 2,853 upregulated, 2,960 downregulated         ↓I chose this analysis because a family member has Multiple Sclerosis (MS). Understanding how inflammation affects the blood-brain barrier is crucial because in MS, inflammatory molecules like TNF-α break down the protective barrier around the brain, allowing immune cells to attack the myelin coating of nerves.[![Bioconductor](https://img.shields.io/badge/Bioconductor-1f65b7?style=flat-square&logo=r&logoColor=white)](https://bioconductor.org/)
+
+- Strong inflammatory pathway activation
+
+- High-quality data (49-59M reads/sample)Brain Endothelial Cells (form blood-brain barrier)
 
 
 
-## Key Findings**Experiment**: E-MTAB-11468  
+## How to Run         ↓
 
 
+
+1. Clone this repositoryGene Expression Changes (5,813 genes affected)
+
+   ```bash
+
+   git clone https://github.com/Helialiaia01/TNF-alpha-RNA-seq-Analysis.git         ↓This project helped me learn bioinformatics while studying something personally meaningful.## Why This Project?[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+
+   cd TNF-alpha-RNA-seq-Analysis
+
+   ```BBB Breakdown → Immune Cell Infiltration → Myelin Damage (MS)
+
+
+
+2. Install R packages```
+
+   ```r
+
+   source("requirements.R")
+
+   ```
+
+## What I Did## What I Did
+
+3. Download data from https://www.ebi.ac.uk/gxa/experiments/E-MTAB-11468/Downloads
+
+   - Get `E-MTAB-11468-experiment-design.tsv` and `E-MTAB-11468-raw-counts.tsv`
+
+   - Put them in the `data/` folder
+
+I analyzed publicly available RNA-seq data to identify which genes change when brain endothelial cells are exposed to TNF-α. The goal was to understand the molecular mechanisms behind inflammation-induced blood-brain barrier dysfunction.
+
+4. Open `TNF_alpha_Brain_Endothelial_Analysis.Rmd` in RStudio and click "Knit"
+
+
+
+## Methods
+
+**Data Source**: EMBL-EBI Expression Atlas  I analyzed publicly available RNA-seq data to identify which genes change when brain endothelial cells are exposed to TNF-α. The goal was to understand the molecular mechanisms behind inflammation-induced blood-brain barrier dysfunction.I chose this analysis because a family member has Multiple Sclerosis (MS), and understanding how inflammation affects the blood-brain barrier is crucial. In MS, inflammatory molecules like TNF-α break down the barrier that protects the brain, letting immune cells attack the protective myelin coating of nerves.RNA-seq analysis of **brain microvascular endothelial cells** treated with TNF-α, investigating transcriptional responses related to blood-brain barrier dysfunction in neuroinflammatory diseases, particularly **Multiple Sclerosis (MS)**.
+
+- DESeq2 for differential expression
+
+- FDR < 0.05 significance threshold**Experiment**: E-MTAB-11468  
+
+- GO and pathway enrichment analysis
+
+- Cell-type filtering for endothelial cells only**Link**: https://www.ebi.ac.uk/gxa/experiments/E-MTAB-11468
+
+
+
+## Why This Matters
+
+
+
+Understanding TNF-α effects on brain endothelial cells could help develop therapies to protect the blood-brain barrier in MS and prevent immune cell infiltration into the brain.**Important**: The original dataset includes both astrocytes and brain endothelial cells, but my analysis filters to study **only the brain endothelial cells** since they're the ones that form the blood-brain barrier.**Data Source**: EMBL-EBI Expression Atlas  
+
+
+
+## Contact
+
+
+
+Helia Mohammadi  ## Key Findings**Experiment**: E-MTAB-11468  
+
+qhellia@gmail.com
+
+
+
+## License
 
 - **5,813 genes** significantly changed expression (FDR < 0.05)**Link**: https://www.ebi.ac.uk/gxa/experiments/E-MTAB-11468## What I Did## Overview
 
+MIT License - See LICENSE file
+
 - Nearly balanced response: 2,853 upregulated, 2,960 downregulated
 
+---
+
 - Strong inflammatory pathway activation (as expected with TNF-α)
+
+*Bioinformatics project, November 2025*
 
 - Results align with known TNF-α biology, validating the analysis
 
