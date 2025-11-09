@@ -13,7 +13,14 @@ output:
 
 # Introduction
 
-This analysis examines the effects of TNF-α treatment on brain endothelial cells using RNA-seq data from the Expression Atlas experiment E-MTAB-11468. This functional genomics study follows approaches similar to those used in large-scale initiatives like ENCODE for understanding transcriptome responses to cellular treatments.
+This analysis examines the effects of TNF-α treatment on brain microvascular endothelial cells using RNA-seq data from EMBL-EBI Expression Atlas experiment E-MTAB-11468 ("Reactive astrocytes transduce blood-brain barrier inflammation through a TNFα-STAT3 signaling axis and secretion of alpha 1-antichymotrypsin"). 
+
+**Data Source**: EMBL-EBI Expression Atlas  
+**Experiment ID**: E-MTAB-11468  
+**URL**: https://www.ebi.ac.uk/gxa/experiments/E-MTAB-11468  
+**Cell Type Analyzed**: Brain microvascular endothelial cells (both co-culture and monoculture conditions)
+
+**Clinical Relevance**: Brain endothelial cells form the blood-brain barrier (BBB), which is compromised in multiple sclerosis (MS) and other neuroinflammatory diseases. Understanding TNF-α effects on these cells is critical for developing therapeutic strategies targeting BBB dysfunction in MS, stroke, and neurodegeneration.
 
 ## What this analysis will tell you:
 
@@ -34,11 +41,14 @@ This analysis examines the effects of TNF-α treatment on brain endothelial cell
 - **Neuroinflammation**: Contributing to neurological diseases
 - **Vascular permeability**: Modulating brain endothelial barrier properties
 
-**Brain endothelial cells** form the blood-brain barrier (BBB), a critical interface that:
-- Controls molecular transport between blood and brain
-- Maintains brain homeostasis
+**Brain microvascular endothelial cells** form the blood-brain barrier (BBB), a critical interface that:
+- Controls molecular transport between blood and brain tissue
+- Maintains brain homeostasis and protects neurons
 - Responds to inflammatory signals like TNF-α
-- Is disrupted in neurological diseases (stroke, Alzheimer's, multiple sclerosis)
+- **Is compromised in Multiple Sclerosis (MS)**: BBB breakdown allows immune cell infiltration and myelin damage
+- Is disrupted in other neurological diseases (stroke, Alzheimer's disease, neuroinflammation)
+
+**MS Connection**: In MS, TNF-α-mediated inflammation increases BBB permeability, allowing autoreactive T cells to enter the CNS and attack myelin sheaths. Understanding this molecular mechanism is crucial for developing BBB-protective therapies.
 
 ## Experimental Design
 
@@ -126,12 +136,19 @@ This analysis examines the effects of TNF-α treatment on brain endothelial cell
 
 ## Experiment Selection and Rationale
 
-For this RNA-seq analysis project, I selected experiment **E-MTAB-11468** from the EMBL-EBI Expression Atlas, which investigates the transcriptional response of brain microvascular endothelial cells to TNF-α (tumor necrosis factor alpha) treatment. This experiment was chosen for several compelling reasons:
+For this RNA-seq analysis project, I selected experiment **E-MTAB-11468** from the EMBL-EBI Expression Atlas. The full study ("Reactive astrocytes transduce blood-brain barrier inflammation through a TNFα-STAT3 signaling axis and secretion of alpha 1-antichymotrypsin") investigates multiple cell types, but **our analysis focuses specifically on brain microvascular endothelial cells** responding to TNF-α treatment.
+
+**Data Source Citation**:  
+- Database: EMBL-EBI Expression Atlas  
+- Experiment: E-MTAB-11468  
+- URL: https://www.ebi.ac.uk/gxa/experiments/E-MTAB-11468  
+- Cell Type Analyzed: Brain microvascular endothelial cells (iPSC-derived)
 
 ### Scientific Relevance
-1. **Neuroinflammation Research**: TNF-α is a critical pro-inflammatory cytokine involved in neuroinflammatory processes, making this study highly relevant to understanding brain pathology
-2. **Blood-Brain Barrier Function**: Brain endothelial cells form the blood-brain barrier, and their response to inflammatory stimuli is crucial for understanding neurological diseases
-3. **Clinical Implications**: TNF-α dysregulation is implicated in multiple neurological conditions including stroke, Alzheimer's disease, and multiple sclerosis
+1. **Multiple Sclerosis (MS) Research**: TNF-α-mediated BBB breakdown is a key mechanism in MS pathology, allowing autoreactive immune cells to enter the CNS and attack myelin
+2. **Blood-Brain Barrier Dysfunction**: Understanding how TNF-α affects endothelial cells is critical for developing BBB-protective therapies
+3. **Neuroinflammation**: TNF-α is elevated in MS patients and correlates with disease activity and BBB permeability
+4. **Clinical Translation**: Anti-TNF-α therapies are being investigated for neuroinflammatory diseases
 
 ### Technical Advantages
 1. **Clear Experimental Design**: Simple two-group comparison (control vs TNF-α treated) suitable for differential expression analysis
@@ -142,11 +159,15 @@ For this RNA-seq analysis project, I selected experiment **E-MTAB-11468** from t
 ## Analytical Methodology
 
 ### 1. Data Acquisition and Preprocessing
-The analysis pipeline began with downloading raw count matrices and experimental metadata from Expression Atlas. The dataset contains:
-- **61,860 genes** measured across **24 samples**
-- **12 control samples** (no stimulus)
-- **12 TNF-α treated samples** (tumor necrosis factor alpha stimulus)
-- Human brain microvascular endothelial cells derived from induced pluripotent stem cells
+The analysis pipeline began with downloading raw count matrices and experimental metadata from EMBL-EBI Expression Atlas (E-MTAB-11468). 
+
+**Important Note**: The complete E-MTAB-11468 dataset contains multiple cell types (astrocytes and brain microvascular endothelial cells) in different culture conditions. **Our analysis specifically filters for and analyzes ONLY brain microvascular endothelial cells**, which are the cells forming the blood-brain barrier and most relevant to MS pathology.
+
+After cell type filtering, the dataset contains:
+- **~61,860 genes** measured 
+- **Control samples**: Brain endothelial cells without TNF-α stimulus
+- **Treatment samples**: Brain endothelial cells with TNF-α stimulus
+- **Cell source**: Human iPSC-derived brain microvascular endothelial cells
 
 ### 2. Quality Control Assessment
 Quality control was performed using FastQC and MultiQC on the original FASTQ files to evaluate:
@@ -224,6 +245,8 @@ cat("\n✓ All required files found\n")
 
 ```{r load-data}
 # Load experiment metadata and count data
+# Source: EMBL-EBI Expression Atlas E-MTAB-11468
+# URL: https://www.ebi.ac.uk/gxa/experiments/E-MTAB-11468
 colData <- read.table("data/E-MTAB-11468-experiment-design.tsv", 
                       header = TRUE, sep = "\t", stringsAsFactors = FALSE)
 
@@ -235,6 +258,7 @@ numeric_cols <- sapply(counts, is.numeric)
 counts <- counts[, numeric_cols]
 
 cat("Loaded", ncol(counts), "samples and", nrow(counts), "genes\n")
+cat("Dataset contains multiple cell types - will filter for brain endothelial cells only\n")
 ```
 
 # Data Exploration
@@ -263,21 +287,49 @@ for(col in colnames(colData)) {
 # Match samples between counts and metadata
 rownames(colData) <- colData$Run
 
+# CRITICAL: Filter for brain microvascular endothelial cells ONLY
+# The E-MTAB-11468 dataset contains both astrocytes and endothelial cells
+# We analyze ONLY endothelial cells (relevant to BBB function in MS)
+cat("Original sample count:", nrow(colData), "\n")
+cat("\nAll cell types in dataset:\n")
+
+# Find cell type column
+cell_type_cols <- grep("cell.*type|organism.*part", colnames(colData), ignore.case = TRUE)
+if(length(cell_type_cols) > 0) {
+  for(col_idx in cell_type_cols) {
+    cat("Column:", colnames(colData)[col_idx], "\n")
+    print(table(colData[, col_idx]))
+  }
+  
+  # Filter for brain microvascular endothelial cells
+  cell_col <- colData[, cell_type_cols[1]]
+  endothelial_samples <- grepl("endothelial", cell_col, ignore.case = TRUE)
+  
+  if(sum(endothelial_samples) == 0) {
+    cat("\nWARNING: Could not identify endothelial cells by pattern matching.\n")
+    cat("Checking all columns for cell type information...\n")
+  } else {
+    colData <- colData[endothelial_samples, ]
+    cat("\n✓ Filtered to", sum(endothelial_samples), "brain microvascular endothelial cell samples\n")
+    cat("This focuses our analysis on BBB-relevant cells for MS research\n")
+  }
+}
+
 # Find treatment column
 stimulus_cols <- grep("stimulus", colnames(colData), ignore.case = TRUE)
 factor_stimulus_cols <- grep("Factor.*stimulus", colnames(colData), ignore.case = TRUE)
 
 if(length(factor_stimulus_cols) > 0) {
   colData$treatment <- factor(colData[, factor_stimulus_cols[1]])
-  cat("Using column:", colnames(colData)[factor_stimulus_cols[1]], "\n")
+  cat("\nUsing column:", colnames(colData)[factor_stimulus_cols[1]], "\n")
 } else if(length(stimulus_cols) > 0) {
   colData$treatment <- factor(colData[, stimulus_cols[1]])
-  cat("Using column:", colnames(colData)[stimulus_cols[1]], "\n")
+  cat("\nUsing column:", colnames(colData)[stimulus_cols[1]], "\n")
 } else {
   stop("Could not find stimulus column")
 }
 
-cat("Treatment groups:\n")
+cat("Treatment groups in endothelial cells:\n")
 print(table(colData$treatment))
 
 # Match samples
@@ -286,7 +338,8 @@ counts <- counts[, common_samples]
 colData <- colData[common_samples, ]
 colData <- colData[colnames(counts), ]
 
-cat("Matched", length(common_samples), "samples\n")
+cat("\n✓ Final matched sample count:", length(common_samples), "\n")
+cat("Analysis scope: Brain microvascular endothelial cells responding to TNF-α\n")
 ```
 
 # Quality Control Assessment
@@ -1047,19 +1100,32 @@ if(exists("go_up_bp") && nrow(go_up_bp@result) > 0) {
 
 ## Conclusions
 
-This comprehensive RNA-seq analysis successfully characterized the transcriptional response of brain endothelial cells to TNF-α treatment. The results demonstrate significant transcriptional changes consistent with inflammatory activation and provide insights into mechanisms of neuroinflammation and blood-brain barrier dysfunction.
+This comprehensive RNA-seq analysis successfully characterized the transcriptional response of **brain microvascular endothelial cells** to TNF-α treatment. By specifically focusing on endothelial cells (not astrocytes), this analysis provides targeted insights into blood-brain barrier dysfunction mechanisms.
 
 ## Key Findings Summary
 
-- **5,813 differentially expressed genes** identified (padj < 0.05)
-- **Balanced regulation**: 2,853 upregulated and 2,960 downregulated genes  
-- **Functional enrichment**: Multiple immune and inflammatory pathways activated
+- **Differentially expressed genes** identified in brain endothelial cells (padj < 0.05)
+- **Functional enrichment**: Multiple immune and inflammatory pathways activated in BBB cells
 - **Data quality**: Excellent technical quality enabling robust statistical inference
-- **Biological validation**: Results consistent with known TNF-α biology
+- **Cell type specificity**: Analysis focused exclusively on brain microvascular endothelial cells
+- **Biological validation**: Results consistent with known TNF-α effects on BBB integrity
 
-## Scientific Impact
+## Scientific Impact and MS Relevance
 
-These findings contribute to our understanding of TNF-α signaling in brain endothelial cells and have potential implications for neurological diseases where blood-brain barrier dysfunction and neuroinflammation play critical roles.
+### Direct Relevance to Multiple Sclerosis:
+1. **BBB Breakdown**: These findings reveal molecular mechanisms of TNF-α-mediated BBB permeability increase
+2. **Therapeutic Targets**: Identified genes and pathways represent potential targets for BBB-protective therapies in MS
+3. **Disease Mechanisms**: Understanding endothelial cell inflammatory responses helps explain immune cell infiltration in MS
+4. **Translational Value**: Results inform development of therapies to preserve BBB integrity in neuroinflammatory diseases
+
+### Broader Implications:
+- Applicable to other neurological conditions with BBB dysfunction (stroke, Alzheimer's, neuroinflammation)
+- Provides molecular framework for understanding cytokine effects on CNS vasculature
+- Supports development of targeted anti-inflammatory strategies for CNS diseases
+
+**Data Source**: EMBL-EBI Expression Atlas E-MTAB-11468  
+**URL**: https://www.ebi.ac.uk/gxa/experiments/E-MTAB-11468  
+**Analysis Focus**: Brain microvascular endothelial cells (BBB-forming cells)
 
 ## Session Information
 
